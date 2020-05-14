@@ -107,89 +107,6 @@ def commonChoiceAllEnabal():
     eventPlayer.commonChoiceLeftEnabal = true
     eventPlayer.commonChoiceRightEnabal = true
 
-rule "init global":
-    @Event global
-    noobCourseTextList = []
-    noobCourseTextList = [
-"欢迎您进入不一样的练枪房!本教程将引导您如何正确的游玩该房间,请按[左键]进行翻页!
-上方黄字也会随时为您的操作做指引哦!",
-    "也许您注意到了,左上角出现了一个全新的元素[真实生命], 这就是该模式的核心, 下面我将为您介绍[真实生命系统], 为了演示, 我将对您造成轻微伤害",
-    "请您注意观察, 随着生命值的减少, 您的[真实生命]也在[减少]",
-    "这就是真实生命的[减法]",
-    "接下来, 为了演示, 我将对你进行一些治疗",
-    "请注意观察, 随着治疗, 您的生命被恢复到了[180], 但是您的真实生命[没有变化]",
-    "接下来, 为了演示, 我将对您造成[1]点伤害, 仅仅1点哦",
-    "没错! 您的生命瞬间降低至恢复生命前的[50]点, 并且由于刚刚受到[1]点伤害的原因, 您的生命实际为[49]点",
-    "这就是[真实生命]的作用, [生命穿透]!",
-    "也就是说, 如果您的[真实生命]没有恢复, 您受到任何程度的伤害也会被[生命穿透]!",
-    "那么如何避免[生命穿透]? 或者说如何恢复[真实生命]?",
-    "接下来我会对你进行一些[治疗]",
-    "请注意观察,随着生命恢复到[满], 您的[真实生命]也恢复到了[满]!",
-    "没错! 只要您把[当前生命]恢复到满, [真实生命]也就随之恢复到了[满]!",
-"总结:
-    1. 真实生命随着当前生命少于真实生命而减小,
-    2. 如果当前生命大于真实生命, 受到任意攻击时, 将被[生命穿透]
-    3. 通过将当前生命恢复到满, 恢复真实生命
-    如果您还不理解, 您可以简单的理解为吃鸡中的[打药], 但是该打药过程会被攻击打断!",
-"以上就是游戏所有核心玩法内容了, 或许您还有一些疑问, 那么请接着看, 或者直接[退出教程]!
-[空格] 答疑
-[下蹲] 退出并开始游戏",
-"Q: 游戏节奏会不会拖慢?
-A: 游戏设有自动回血系统, 在练枪房中, 练枪>杀人, 所以不会",
-"Q: 有什么意义?
-A: 游戏中奶位是游戏玩法的核心, 如果一方没有奶位, 那么将无法还原真实环境, 
-而有奶位又容易造成有没有奶的队伍被碾压, 而且奶位水平参差不齐, 无法还原真实枪法",
-"Q: 那为什么不去玩杀人就回满血的练枪房?
-A: 多方因素, 最主要的问题就是无法模拟真实环境, 
-枪法被弱化, 比谁返场快, 技能多, 节奏不受控制等等等等, 你去玩玩比较一下就明白了",
-"所有内容结束, 感谢观看!",
-"正在退出新手教程..."]
-
-rule "init player":
-    @Event eachPlayer
-    eventPlayer.hodingDetectionEnabal = true
-rule "player init and replace the hero":
-    @Event eachPlayer
-    @Condition eventPlayer.seletHeros == null or eventPlayer.seletHeros != eventPlayer.getCurrentHero()
-    eventPlayer.seletHeros = eventPlayer.getCurrentHero()
-    eventPlayer.realHealth = eventPlayer.getMaxHealth()
-    eventPlayer.maxFleshHealth = eventPlayer.getMaxHealth()
-    eventPlayer.setAllowedHeroes(getDamageHeroes())
-
-rule "dealt damage":
-    @Event playerDealtDamage
-    victim.restoreHealthCountdown = 1.5
-    victim.stopAllHoT()
-    destroyEffect(victim.healthEntity)
-    if victim.getHealth() < victim.realHealth:
-        victim.realHealth = victim.getHealth()
-    if victim.getHealth() != victim.getMaxHealth() and victim.getHealth() > victim.realHealth:
-        damage(victim,attacker,(victim.getHealth() - victim.realHealth) + eventDamage)
-        smallMessage(attacker,"穿透!")
-
-rule "restore relHealth":
-    @Event eachPlayer
-    @Condition eventPlayer.getHealth() >= eventPlayer.getMaxHealth()
-    eventPlayer.realHealth = eventPlayer.getMaxHealth()
-    eventPlayer.stopAllHoT()
-    destroyEffect(eventPlayer.healthEntity)
-    smallMessage(eventPlayer,"您已恢复健康!")
-
-rule "restore health countdown":
-    @Event eachPlayer
-    @Condition eventPlayer.restoreHealthCountdown > 0
-    do:
-        eventPlayer.restoreHealthCountdown -= 0.1
-        wait(0.1)
-    while RULE_CONDITION
-
-rule "restore Health":
-    @Event eachPlayer
-    @Condition eventPlayer.getHealth() < eventPlayer.getMaxHealth() and eventPlayer.restoreHealthCountdown == 0 and eventPlayer.gameMode == 1
-    eventPlayer.startHoT(eventPlayer,9999,25)
-    createEffect(eventPlayer,Effect.SPARKLES,Color.LIME_GREEN,eventPlayer,1.5,EffectReeval.POSITION_AND_RADIUS)
-    eventPlayer.healthEntity = getLastCreatedEntity()
-
 rule "[热键]按主要攻击(左键)":
     @Event eachPlayer
     @Condition eventPlayer.isHoldingButton(Button.PRIMARY_FIRE) and eventPlayer.hodingDetectionEnabal
@@ -235,7 +152,88 @@ rule "[热键]按蹲下":
     @Event eachPlayer
     @Condition not eventPlayer.isHoldingButton(Button.CROUCH) and eventPlayer.hodingDetectionEnabal
     eventPlayer.isHoldingCrouch = false
+rule "init global":
+    @Event global
+    noobCourseTextList = []
+    noobCourseTextList = [
+"欢迎您进入不一样的练枪房!本教程将引导您如何正确的游玩该房间,请按[左键]进行翻页!
+上方黄字也会随时为您的操作做指引哦!",
+    "也许您注意到了,左上角出现了一个全新的元素[真实生命], 这就是该模式的核心, 下面我将为您介绍[真实生命系统], 为了演示, 我将对您造成轻微伤害",
+    "请您注意观察, 随着生命值的减少, 您的[真实生命]也在[减少]",
+    "这就是真实生命的[减法]",
+    "接下来, 为了演示, 我将对你进行一些治疗",
+    "请注意观察, 随着治疗, 您的生命被恢复到了[180], 但是您的真实生命[没有变化]",
+    "接下来, 为了演示, 我将对您造成[1]点伤害, 仅仅1点哦",
+    "没错! 您的生命瞬间降低至恢复生命前的[50]点, 并且由于刚刚受到[1]点伤害的原因, 您的生命实际为[49]点",
+    "这就是[真实生命]的作用, [生命穿透]!",
+    "也就是说, 如果您的[真实生命]没有恢复, 您受到任何程度的伤害也会被[生命穿透]!",
+    "那么如何避免[生命穿透]? 或者说如何恢复[真实生命]?",
+    "接下来我会对你进行一些[治疗]",
+    "请注意观察,随着生命恢复到[满], 您的[真实生命]也恢复到了[满]!",
+    "没错! 只要您把[当前生命]恢复到满, [真实生命]也就随之恢复到了[满]!",
+"总结:
+    1. 真实生命随着当前生命少于真实生命而减小,
+    2. 如果当前生命大于真实生命, 受到任意攻击时, 将被[生命穿透]
+    3. 通过将当前生命恢复到满, 恢复真实生命
+    如果您还不理解, 您可以简单的理解为吃鸡中的[打药], 但是该打药过程会被攻击打断!",
+"以上就是游戏所有核心玩法内容了, 或许您还有一些疑问, 那么请接着看, 或者直接[退出教程]!
+[空格] 答疑
+[下蹲] 退出并开始游戏",
+"Q: 游戏节奏会不会拖慢?
+A: 游戏设有自动回血系统, 在练枪房中, 练枪>杀人, 所以不会",
+"Q: 有什么意义?
+A: 游戏中奶位是游戏玩法的核心, 如果一方没有奶位, 那么将无法还原真实环境, 
+而有奶位又容易造成有没有奶的队伍被碾压, 而且奶位水平参差不齐, 无法还原真实枪法",
+"Q: 那为什么不去玩杀人就回满血的练枪房?
+A: 多方因素, 最主要的问题就是无法模拟真实环境, 
+枪法被弱化, 比谁返场快, 技能多, 节奏不受控制等等等等, 你去玩玩比较一下就明白了",
+"所有内容结束, 感谢观看!",
+"正在退出新手教程..."]
 
+rule "init player":
+    @Event eachPlayer
+    eventPlayer.hodingDetectionEnabal = true
+    eventPlayer.setAllowedHeroes(getDamageHeroes())
+rule "player select hero and replace the hero":
+    @Event eachPlayer
+    @Condition eventPlayer.seletHeros != eventPlayer.getCurrentHero()
+    eventPlayer.seletHeros = eventPlayer.getCurrentHero()
+    eventPlayer.realHealth = eventPlayer.getMaxHealth()
+    eventPlayer.maxFleshHealth = eventPlayer.getMaxHealth()
+
+rule "dealt damage":
+    @Event playerDealtDamage
+    victim.restoreHealthCountdown = 1.5
+    victim.stopAllHoT()
+    destroyEffect(victim.healthEntity)
+    if victim.getHealth() < victim.realHealth:
+        victim.realHealth = victim.getHealth()
+    if victim.getHealth() != victim.getMaxHealth() and victim.getHealth() > victim.realHealth:
+        damage(victim,attacker,(victim.getHealth() - victim.realHealth) + eventDamage)
+        smallMessage(attacker,"穿透!")
+
+rule "restore relHealth":
+    @Event eachPlayer
+    @Condition eventPlayer.getHealth() >= eventPlayer.getMaxHealth()
+    eventPlayer.realHealth = eventPlayer.getMaxHealth()
+    eventPlayer.stopAllHoT()
+    destroyEffect(eventPlayer.healthEntity)
+    smallMessage(eventPlayer,"您已恢复健康!")
+
+rule "restore health countdown":
+    @Event eachPlayer
+    @Condition eventPlayer.restoreHealthCountdown > 0
+    do:
+        eventPlayer.restoreHealthCountdown -= 0.1
+        wait(0.1)
+    while RULE_CONDITION
+
+rule "restore Health":
+    @Event eachPlayer
+    @Condition eventPlayer.getHealth() < eventPlayer.getMaxHealth() and eventPlayer.restoreHealthCountdown == 0 and eventPlayer.gameMode == 1
+    eventPlayer.startHoT(eventPlayer,9999,25)
+    createEffect(eventPlayer,Effect.SPARKLES,Color.LIME_GREEN,eventPlayer,1.5,EffectReeval.POSITION_AND_RADIUS)
+    eventPlayer.healthEntity = getLastCreatedEntity()
 
 rule "player common choice":
     @Event eachPlayer
@@ -417,7 +415,7 @@ rule "gameMode 2(新手教程)":
         
 
 
-rule "[多行文本]":
+rule "[多行文本]全局":
     @Event global
     #生命
     hudSubtext([p for p in getAllPlayers() if p.realHealth / p.maxFleshHealth >= 1],"真实生命:▒▒▒▒▒▒▒▒▒▒".format(),HudPosition.LEFT,10,Color.GREEN,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
@@ -431,6 +429,8 @@ rule "[多行文本]":
     hudSubtext([p for p in getAllPlayers() if p.realHealth / p.maxFleshHealth > 0.2 and p.realHealth / p.maxFleshHealth < 0.3],"真实生命:▒▒",HudPosition.LEFT,10,Color.ORANGE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
     hudSubtext([p for p in getAllPlayers() if p.realHealth / p.maxFleshHealth > 0.1 and p.realHealth / p.maxFleshHealth < 0.2],"真实生命:▒",HudPosition.LEFT,10,Color.RED,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
     hudSubtext([p for p in getAllPlayers() if p.realHealth / p.maxFleshHealth < 0.1],"真实生命:!",HudPosition.LEFT,10,Color.RED,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
+    #署名
+    hudSubtext([p for p in getAllPlayers() if p != null],"作者:由我来守护你#51421",HudPosition.TOP,0,Color.WHITE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
 
 rule "[多行文本]玩家":
     @Event eachPlayer
