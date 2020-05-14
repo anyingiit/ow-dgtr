@@ -46,6 +46,12 @@ playervar commonChoiceLength
 playervar commonChoiceEnabal
 playervar commonChoiceLeftEnabal
 playervar commonChoiceRightEnabal
+#通用确认
+playervar commonAffirmEnabal
+playervar commonAaffirmValue
+#通用取消
+playervar commonCancelEnabal
+playervar commonCancelValue
 playervar placeholderEnabal
 playervar placeholderText
 playervar hodingDetectionEnabal
@@ -53,6 +59,7 @@ playervar isHoldingPFire
 playervar isHoldingSFire
 playervar isHoldingInteract
 playervar isHoldingJump
+playervar isHoldingCrouch
 playervar noobCourseTextA
 playervar noobCourseTextB
 playervar noobCourseReflash
@@ -103,7 +110,9 @@ def commonChoiceAllEnabal():
 rule "init global":
     @Event global
     noobCourseTextList = []
-    noobCourseTextList = ["欢迎您进入不一样的练枪房!本教程将引导您如何正确的游玩该房间,请按[左键]进行翻页!",
+    noobCourseTextList = [
+"欢迎您进入不一样的练枪房!本教程将引导您如何正确的游玩该房间,请按[左键]进行翻页!
+上方黄字也会随时为您的操作做指引哦!",
     "也许您注意到了,左上角出现了一个全新的元素[真实生命], 这就是该模式的核心, 下面我将为您介绍[真实生命系统], 为了演示, 我将对您造成轻微伤害",
     "请您注意观察, 随着生命值的减少, 您的[真实生命]也在[减少]",
     "这就是真实生命的[减法]",
@@ -122,13 +131,17 @@ rule "init global":
     2. 如果当前生命大于真实生命, 受到任意攻击时, 将被[生命穿透]
     3. 通过将当前生命恢复到满, 恢复真实生命
     如果您还不理解, 您可以简单的理解为吃鸡中的[打药], 但是该打药过程会被攻击打断!",
-    "以上就是游戏所有核心玩法内容了, 或许您还有一些疑问, 那么请接着看, 或者直接[退出教程]!",
+"以上就是游戏所有核心玩法内容了, 或许您还有一些疑问, 那么请接着看, 或者直接[退出教程]!
+[空格] 答疑
+[下蹲] 退出并开始游戏",
 "Q: 游戏节奏会不会拖慢?
 A: 游戏设有自动回血系统, 在练枪房中, 练枪>杀人, 所以不会",
 "Q: 有什么意义?
-A: 游戏中奶位是游戏玩法的核心, 如果一方没有奶位, 那么将无法还原真实环境, 而有奶位又容易造成有没有奶的队伍被碾压, 而且奶位水平参差不齐, 无法还原真实枪法",
+A: 游戏中奶位是游戏玩法的核心, 如果一方没有奶位, 那么将无法还原真实环境, 
+而有奶位又容易造成有没有奶的队伍被碾压, 而且奶位水平参差不齐, 无法还原真实枪法",
 "Q: 那为什么不去玩杀人就回满血的练枪房?
-A: 多方因素, 最主要的问题就是无法模拟真实环境, 枪法被弱化, 比谁返场快, 技能多, 节奏不受控制等等等等, 你去玩玩比较一下就明白了",
+A: 多方因素, 最主要的问题就是无法模拟真实环境, 
+枪法被弱化, 比谁返场快, 技能多, 节奏不受控制等等等等, 你去玩玩比较一下就明白了",
 "所有内容结束, 感谢观看!",
 "正在退出新手教程..."]
 
@@ -142,7 +155,6 @@ rule "player init and replace the hero":
     eventPlayer.realHealth = eventPlayer.getMaxHealth()
     eventPlayer.maxFleshHealth = eventPlayer.getMaxHealth()
     eventPlayer.setAllowedHeroes(getDamageHeroes())
-    eventPlayer.commonChoiceEnabal = true
 
 rule "dealt damage":
     @Event playerDealtDamage
@@ -214,21 +226,20 @@ rule "[热键]松跳跃(空格)":
     @Condition not eventPlayer.isHoldingButton(Button.JUMP) and eventPlayer.hodingDetectionEnabal
     eventPlayer.isHoldingJump = false
 
-rule "player gameMode init":
+rule "[热键]按蹲下":
     @Event eachPlayer
-    @Condition eventPlayer.gameMode == 0
-    eventPlayer.placeholderEnabal = true
-    eventPlayer.placeholderText = ">>>>>[左键/右键]进行调整 [空格]进行确认<<<<<"
-    #菜单
-    eventPlayer.commonChoiceLength = 2
-    hudHeader(eventPlayer if eventPlayer.gameMode == 0 else null,"{0}开始游戏".format(iconString(Icon.ARROW_RIGHT) if eventPlayer.commonChoiceIndex == 0 else ""),HudPosition.TOP,6,Color.ORANGE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
-    hudHeader(eventPlayer if eventPlayer.gameMode == 0 else null,"{0}新手教程(推荐第一次进入查看)".format(iconString(Icon.ARROW_RIGHT) if eventPlayer.commonChoiceIndex == 1 else ""),HudPosition.TOP,7,Color.ORANGE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
-    commonChoiceAllEnabal()
-    disallowButtons()
+    @Condition eventPlayer.isHoldingButton(Button.CROUCH) and eventPlayer.hodingDetectionEnabal
+    eventPlayer.isHoldingCrouch = true
+
+rule "[热键]按蹲下":
+    @Event eachPlayer
+    @Condition not eventPlayer.isHoldingButton(Button.CROUCH) and eventPlayer.hodingDetectionEnabal
+    eventPlayer.isHoldingCrouch = false
+
 
 rule "player common choice":
     @Event eachPlayer
-    @Condition eventPlayer.commonChoiceEnabal and eventPlayer.isHoldingPFire or eventPlayer.isHoldingSFire
+    @Condition eventPlayer.commonChoiceEnabal and (eventPlayer.isHoldingPFire or eventPlayer.isHoldingSFire)
     do:
         if eventPlayer.isHoldingPFire and eventPlayer.commonChoiceLeftEnabal:  
             if eventPlayer.commonChoiceIndex == eventPlayer.commonChoiceLength-1:
@@ -243,11 +254,45 @@ rule "player common choice":
         wait(0.2)
     while RULE_CONDITION
 
+rule "player common affirm":
+    @Event eachPlayer
+    @Condition eventPlayer.commonAffirmEnabal and eventPlayer.isHoldingJump and not eventPlayer.isHoldingCrouch
+    smallMessage(eventPlayer,"您正在确认, 请继续长按")
+    wait(1.5,Wait.ABORT_WHEN_FALSE)
+    eventPlayer.commonAaffirmValue = true
+    wait(1)
+    eventPlayer.commonAaffirmValue = false
+    eventPlayer.commonAffirmEnabal = false
+
+
+rule "player common cancel":
+    @Event eachPlayer
+    @Condition eventPlayer.commonCancelEnabal and eventPlayer.isHoldingCrouch and not eventPlayer.isHoldingJump
+    smallMessage(eventPlayer,"您正在取消/退出, 请继续长按")
+    wait(1.5,Wait.ABORT_WHEN_FALSE)
+    eventPlayer.commonCancelValue = true
+    wait(1)
+    eventPlayer.commonCancelValue = false
+    eventPlayer.commonCancelEnabal = false
+    
+
+rule "player gameMode menu init":
+    @Event eachPlayer
+    @Condition eventPlayer.gameMode == 0
+    eventPlayer.commonChoiceEnabal = true
+    eventPlayer.commonAffirmEnabal = true
+    eventPlayer.placeholderEnabal = true
+    eventPlayer.placeholderText = ">>>>>[左键/右键]进行调整 [空格]进行确认<<<<<"
+    #菜单
+    eventPlayer.commonChoiceLength = 2
+    hudHeader(eventPlayer if eventPlayer.gameMode == 0 else null,"{0}开始游戏".format(iconString(Icon.ARROW_RIGHT) if eventPlayer.commonChoiceIndex == 0 else ""),HudPosition.TOP,6,Color.ORANGE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
+    hudHeader(eventPlayer if eventPlayer.gameMode == 0 else null,"{0}新手教程(推荐第一次进入查看)".format(iconString(Icon.ARROW_RIGHT) if eventPlayer.commonChoiceIndex == 1 else ""),HudPosition.TOP,7,Color.ORANGE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
+    commonChoiceAllEnabal()
+    disallowButtons()
+
 rule "player gameMode affirm":
     @Event eachPlayer
-    @Condition eventPlayer.gameMode == 0 and eventPlayer.isHoldingJump
-    smallMessage(eventPlayer,"请继续长按确认")
-    wait(1.5,Wait.ABORT_WHEN_FALSE)
+    @Condition eventPlayer.gameMode == 0 and eventPlayer.commonAaffirmValue
     switch(eventPlayer.commonChoiceIndex):
         case 0:
             eventPlayer.gameMode = 1
@@ -256,15 +301,17 @@ rule "player gameMode affirm":
             eventPlayer.gameMode = 2
             break
 
-rule "正式开始游戏初始化":
+rule "gameMode 1(正常开始) 初始化":
     @Event eachPlayer
     @Condition eventPlayer.gameMode == 1
     eventPlayer.placeholderEnabal = false
     eventPlayer.commonChoiceEnabal = false
     eventPlayer.hodingDetectionEnabal = false
+    eventPlayer.commonAffirmEnabal = false
+    eventPlayer.commonCancelEnabal = false
     allowButtons()
 
-rule "新手教程初始化(在重生室)":
+rule "gameMode 2(新手教程) 初始化 - 在重生室":
     @Event eachPlayer
     @Condition eventPlayer.gameMode == 2 and eventPlayer.isInSpawnRoom()
     allowButtons()
@@ -274,20 +321,20 @@ rule "新手教程初始化(在重生室)":
     eventPlayer.commonChoiceLength = len(noobCourseTextList)
     #新手教程HUD
     hudHeader(eventPlayer if eventPlayer.gameMode == 2 and eventPlayer.noobCourseTextA != null else null,eventPlayer.noobCourseTextA,HudPosition.TOP,7,Color.ORANGE,HudReeval.VISIBILITY_AND_STRING,SpecVisibility.DEFAULT)
-    eventPlayer.placeholderText = null
+    eventPlayer.placeholderText = "请按照提示操作"
     eventPlayer.noobCourseTextA = "请您走出重生室以进行教程! 您将不受收到敌人的影响!"
     
-rule "新手教程初始化(出重生室)":
+rule "gameMode 2(新手教程) 初始化 - 出重生室":
     @Event eachPlayer
     @Condition eventPlayer.gameMode == 2 and not eventPlayer.isInSpawnRoom()
     eventPlayer.hodingDetectionEnabal = true
     commonChoiceLeftEnabal()
     eventPlayer.noobCourseReflash = true
     eventPlayer.placeholderEnabal = true
-    eventPlayer.placeholderText = "[左键]下一页"
+    eventPlayer.placeholderText = ">>>>>[左键]下一页<<<<<"
     disallowButtons()
 
-rule "新手教程":
+rule "gameMode 2(新手教程)":
     @Event eachPlayer
     @Condition eventPlayer.gameMode == 2 and not eventPlayer.isInSpawnRoom() and (eventPlayer.isHoldingPFire or eventPlayer.noobCourseReflash)
     if eventPlayer.noobCourseReflash:
@@ -330,12 +377,29 @@ rule "新手教程":
         case 12:
             eventPlayer.noobCourseTextA = noobCourseTextList[eventPlayer.commonChoiceIndex]
             while(eventPlayer.getHealth() < eventPlayer.getMaxHealth()):
-                heal(eventPlayer,null,50)
+                heal(eventPlayer,null,60)
                 wait(0.5)
             break
         case 13:
         case 14:
+            eventPlayer.noobCourseTextA = noobCourseTextList[eventPlayer.commonChoiceIndex]
+            break
         case 15:
+            eventPlayer.noobCourseTextA = noobCourseTextList[eventPlayer.commonChoiceIndex]
+            #开启确认和取消,关闭选择
+            eventPlayer.placeholderText = ">>>>>[空格]继续  [下蹲]退出<<<<<"
+            eventPlayer.commonCancelEnabal = true
+            eventPlayer.commonAffirmEnabal = true
+            while(not eventPlayer.commonAaffirmValue and not eventPlayer.commonCancelValue):
+                wait(0.1)
+            if(eventPlayer.commonAaffirmValue):
+                eventPlayer.commonChoiceIndex++
+                eventPlayer.placeholderText = ">>>>>[左键]下一页<<<<<"
+            elif(eventPlayer.commonCancelValue):
+                eventPlayer.commonChoiceIndex = 20
+                eventPlayer.placeholderText = "正在退出"
+            eventPlayer.noobCourseReflash = true
+            break
         case 16:
         case 17:
         case 18:
@@ -343,9 +407,11 @@ rule "新手教程":
             eventPlayer.noobCourseTextA = noobCourseTextList[eventPlayer.commonChoiceIndex]
             break
         case 20:
+        case 21:
             eventPlayer.noobCourseTextA = noobCourseTextList[eventPlayer.commonChoiceIndex]
             eventPlayer.gameMode = 1
             wait(2)
+            break
     eventPlayer.commonChoiceEnabal = true
 
         
@@ -387,6 +453,9 @@ rule "debug":
     @Disabled
     # print("{0}realHealth:{1}".format(eventPlayer,eventPlayer.realHealth))
     # print("{0}maxHealth:{1}".format(eventPlayer,eventPlayer.getMaxHealth()))
-    print("Interact:{0}".format(eventPlayer.isHoldingInteract))
-    print("PFire:{0}".format(eventPlayer.isHoldingPFire))
-    print("SFire:{0}".format(eventPlayer.isHoldingSFire))
+    # print("Interact:{0}".format(eventPlayer.isHoldingInteract))
+    # print("PFire:{0}".format(eventPlayer.isHoldingPFire))
+    # print("SFire:{0}".format(eventPlayer.isHoldingSFire))
+    # print(getServerLoad())
+    # print(getPeakServerLoad())
+    # print(getAverageServerLoad())
